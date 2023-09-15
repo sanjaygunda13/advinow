@@ -11,7 +11,7 @@ Activate the virtual environment by running the following command in the project
 
 ```powershell
 python -m venv venv
-./advi/Scripts/Activate.ps1
+./venv/Scripts/Activate.ps1
 ```
 
 **Step 2: Install Dependencies**
@@ -19,14 +19,14 @@ python -m venv venv
 Install the required Python packages using pip:
 
 ```powershell
-pip install -r .\diagnosis\requirements\requirements.txt
+pip install -r .\advinow\requirements\requirements.txt
 ```
 
 **Step 3: Initialize Alembic Migrations**
 Navigate to the app directory:
 
 ```powershell
-cd .\diagnosis\app\
+cd .\advinow\app\
 ```
 
 Initialize Alembic migrations:
