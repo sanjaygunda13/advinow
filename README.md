@@ -5,11 +5,12 @@
 
 Follow these steps to set up and run the project.
 
-**Step 1: Activate Virtual Environment**
+**Step 1: Create and activate Virtual Environment**
 
 Activate the virtual environment by running the following command in the project's root directory:
 
 ```powershell
+python -m venv venv
 ./advi/Scripts/Activate.ps1
 ```
 
