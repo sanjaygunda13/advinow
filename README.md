@@ -46,10 +46,10 @@ target_metadata = Base.metadata
 
 **Step 5: Configure Database Connection**
 
-Open the `alembic.ini` file and find the `sqlalchemy.url` variable. Assign the following value to the variable (without quotes):
+Open the `alembic.ini` file in the app folder and find the `sqlalchemy.url` variable. Assign the following value to the variable (without quotes):
 
 ```
-sqlite:///./test.db
+sqlite:///./diagnosis.db
 ```
 
 **Step 6: Create Database Migration**
