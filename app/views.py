@@ -42,6 +42,10 @@ class BusinessSymptom(pydantic.BaseModel):
 @router.post("/upload_csv_file/")
 async def create_file(csv_file: UploadFile):
     try:
+        logger.info(type(UploadFile))	
+        logger.info(csv_file.content_type=="text/csv")	
+        if (csv_file.content_type !="text/csv"):	
+            raise  HTTPException(400, detail="Invalid document type")
         contents = await csv_file.read()
         decoded_contents = contents.decode('utf-8')
         csv_data = list(csv.DictReader(StringIO(decoded_contents)))
@@ -57,10 +61,10 @@ async def create_file(csv_file: UploadFile):
             item['Symptom Code'] =item['Symptom Code'] or glbvariables.DUMMY_SYMPTOM_ID
             item['Symptom Diagnostic']=item['Symptom Diagnostic'].title() 
             
-            if item['Symptom Diagnostic'] =='True' or item['Symptom Diagnostic']=='Yes':
-                item['Symptom Diagnostic']= True
+            if item['Symptom Diagnostic'] == 'True' or item['Symptom Diagnostic']=='Yes':
+                item['Symptom Diagnostic'] = glbvariables.DIAGNOSED
             else:
-                item['Symptom Diagnostic'] = False
+                item['Symptom Diagnostic'] = glbvariables.NOT_DIAGNOSED
             
         
             mapped_item = {
@@ -81,11 +85,14 @@ async def create_file(csv_file: UploadFile):
         return {"Message":"File processed succesfully" }
 
     except KeyError as e:
-        raise HTTPException(status_code=400, detail=f"KeyError: {str(e)}")
+        logger.info(f"An error occurred: {e}", exc_info=True)	
+        raise HTTPException(status_code=400, detail=f"KeyError: CSV heddings are not as expected or might have extra values")
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=f"ValueError: {str(e)}")
+        logger.info(f"An error occurred: {e}", exc_info=True)	
+        raise HTTPException(status_code=400, detail=f"ValueError: Data is not formated")	
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+        logger.info(f"An error occurred: {e}", exc_info=True)	
+        raise HTTPException(status_code=500, detail=f"An error occurred file content is not properlly alligned")
         
 
 def save_data(business_symptoms_csv):
@@ -142,6 +149,7 @@ def save_data(business_symptoms_csv):
                 db.commit()
     
         except IntegrityError as e:
+            logger.info(f"An error occurred: {e}", exc_info=True)
             db.rollback()  # Rollback the transaction for the item with duplicate primary key
             raise HTTPException(status_code=500, detail=f"Error inserting data into the database: {str(e)}")
     
