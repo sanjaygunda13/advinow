@@ -1,34 +1,29 @@
-import logging
+import logging.config
+import os
 import pydantic
 import json
 import glbvariables
 import csv
-from fastapi import APIRouter, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, File, HTTPException, Query, UploadFile, status
 from sqlalchemy.exc import IntegrityError
 from models import Business, Diagnosis, Symptoms
 from contextlib import contextmanager
-from database import SessionLocal
+from database import create_session
 from io import StringIO
 
+# Get the directory of the current script
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Construct the absolute path to logging.conf
+log_config_path = os.path.join(script_dir, 'logging.conf')
 # setup loggers
-logging.config.fileConfig('logging.conf', disable_existing_loggers=False)
+logging.config.fileConfig(log_config_path, disable_existing_loggers=False)
 
 # get root logger
 logger = logging.getLogger(__name__) 
 router = APIRouter()
 
 # DB session creation and closing
-@contextmanager
-def create_session():
-    session = SessionLocal()
-    try:
-        yield session
-        session.commit()  # Commit changes if successful
-    except Exception as e:
-        session.rollback()  # Rollback changes in case of an exception
-        raise e
-    finally:
-        session.close()
         
 # Class to help create a object of csv file data for each row 
 class BusinessSymptom(pydantic.BaseModel):
@@ -40,8 +35,10 @@ class BusinessSymptom(pydantic.BaseModel):
     
 
 @router.post("/upload_csv_file/")
-async def create_file(csv_file: UploadFile):
+async def create_file(csv_file: UploadFile=File(...)):
     try:
+        if (csv_file.content_type !="text/csv"):	
+            raise  HTTPException(400, detail="Invalid document type")
         contents = await csv_file.read()
         decoded_contents = contents.decode('utf-8')
         csv_data = list(csv.DictReader(StringIO(decoded_contents)))
@@ -50,17 +47,16 @@ async def create_file(csv_file: UploadFile):
         
         # Updating and filling data if empty
         for item in csv_data:
-            
             item['Business ID'] = int(item['Business ID']) if item['Business ID'].strip() else glbvariables.DUMMY_BUSINESS_ID
             item['Business Name'] = item['Business Name'] or glbvariables.DUMMY_NAME
             item['Symptom Name'] = item['Symptom Name'] or glbvariables.DUMMY_NAME
             item['Symptom Code'] =item['Symptom Code'] or glbvariables.DUMMY_SYMPTOM_ID
             item['Symptom Diagnostic']=item['Symptom Diagnostic'].title() 
             
-            if item['Symptom Diagnostic'] =='True' or item['Symptom Diagnostic']=='Yes':
-                item['Symptom Diagnostic']= True
+            if item['Symptom Diagnostic'] == 'True' or item['Symptom Diagnostic']=='Yes':
+                item['Symptom Diagnostic'] = glbvariables.DIAGNOSED
             else:
-                item['Symptom Diagnostic'] = False
+                item['Symptom Diagnostic'] = glbvariables.NOT_DIAGNOSED
             
         
             mapped_item = {
@@ -81,11 +77,14 @@ async def create_file(csv_file: UploadFile):
         return {"Message":"File processed succesfully" }
 
     except KeyError as e:
-        raise HTTPException(status_code=400, detail=f"KeyError: {str(e)}")
+        logger.info(f"An error occurred: {e}", exc_info=True)	
+        raise HTTPException(status_code=400, detail=f"KeyError: CSV heddings are not as expected or might have extra values")
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=f"ValueError: {str(e)}")
+        logger.info(f"An error occurred: {e}", exc_info=True)	
+        raise HTTPException(status_code=400, detail=f"ValueError: Data is not formated")	
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+        logger.info(f"An error occurred: {e}", exc_info=True)	
+        raise HTTPException(status_code=500, detail=f"An error occurred file content is not properlly alligned")
         
 
 def save_data(business_symptoms_csv):
@@ -142,6 +141,7 @@ def save_data(business_symptoms_csv):
                 db.commit()
     
         except IntegrityError as e:
+            logger.info(f"An error occurred: {e}", exc_info=True)
             db.rollback()  # Rollback the transaction for the item with duplicate primary key
             raise HTTPException(status_code=500, detail=f"Error inserting data into the database: {str(e)}")
     
@@ -186,8 +186,10 @@ def get_data(BusinessID: int = Query(None, description="Filter by Business Name"
                 )
                 filtered_data.append(mappingdata_BS)
             data = [dict(item) for item in filtered_data]
-        
-            return (data)
+            if len(data)>0:
+                return data
+            else:
+                return {"Message":"No data found. Please re adjust your filter"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred:"+str(e))
 
