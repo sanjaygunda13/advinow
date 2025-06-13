@@ -28,6 +28,6 @@ jobs:
       run: |
           python -m pip install --upgrade pip
           pwd
-          pip install -r ./advinow/requirements/requirements.txt
+          pip install -r ./requirements/requirements.txt
 
       
