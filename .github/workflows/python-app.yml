@@ -23,11 +23,24 @@ jobs:
       run: python -m venv venv 
     - name: Activate python 
       run: source venv/bin/activate
+    - name: Cache pip packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
     - name: Install requirments
       
       run: |
           python -m pip install --upgrade pip
           pwd
           pip install -r ./requirements/requirements.txt
+    - name: Initialize Alembic migrations
+      run: |
+        cd .\app\
+
+        alembic init migrations
+      
 
       
