@@ -46,6 +46,5 @@ jobs:
         ls
         sed -i '/^target_metadata *=/c\target_metadata = Base.metadata' ./app/migrations/env.py
         grep -q 'from models import Base' ./migrations/env.py || sed -i '1ifrom models import Base' ./app/migrations/env.py
-        vi ./app/migrations/env.py
 
       
