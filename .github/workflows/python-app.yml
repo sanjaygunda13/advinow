@@ -24,6 +24,6 @@ jobs:
     - name: Activate python 
       run: source venv/bin/activate
     - name: Install requirments
-      run: pip install -r requirments/requirments.txt
+      run: pip install -r .\advinow\requirements\requirements.txt
 
       
