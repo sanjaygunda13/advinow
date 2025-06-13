@@ -3,7 +3,7 @@
 
 name: Python application
 
-on: workflow_dispatch
+on: [push]
 
 permissions:
   contents: read
@@ -40,8 +40,7 @@ jobs:
       run: |
         ls
         pwd
-        cd .\app\
-
+        cd ./app
         alembic init migrations
       
 
