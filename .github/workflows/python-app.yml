@@ -34,6 +34,7 @@ jobs:
       
       run: |
           python -m pip install --upgrade pip
+          ll
           pwd
           pip install -r ./requirements/requirements.txt
     - name: Initialize Alembic migrations
