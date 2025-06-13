@@ -26,7 +26,7 @@ jobs:
     - name: Install requirments
       
       run: |
-        echo pwd
-        pip install -r ./\/advinow/\/requirements/\/requirements.txt
+          python -m pip install --upgrade pip
+          pip install -r ./advinow/requirements/requirements.txt
 
       
