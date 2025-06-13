@@ -20,4 +20,10 @@ jobs:
       with:
         python-version: "3.10"
     - name: activate python
-      run: python -m venv venv
+      run: python -m venv venv 
+    - name: Activate python 
+      run: source venv/bin/activate
+    - name: Install requirments
+      run: pip install -r requirments/requirments.txt
+
+      
