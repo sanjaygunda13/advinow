@@ -27,7 +27,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        key: ${{ runner.os }}-pip-${{ hashFiles('./advinow/requirements/requirements.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip-
     - name: Install requirments
@@ -42,6 +42,10 @@ jobs:
         pwd
         cd ./app
         alembic init migrations
-      
+    - name: Update Alembic env.py target_metadata
+      run: |
+        sed -i '/^target_metadata *=/c\target_metadata = Base.metadata' ./migrations/env.py
+        grep -q 'from models import Base' ./migrations/env.py || sed -i '1ifrom models import Base' ./migrations/env.py
+        vi ./migrations/env.py
 
       
