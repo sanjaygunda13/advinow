@@ -44,8 +44,6 @@ jobs:
     - name: Update Alembic env.py target_metadata
       run: |
         ls
-        cd ..
-        ls
         sed -i '/^target_metadata *=/c\target_metadata = Base.metadata' ./migrations/env.py
         grep -q 'from models import Base' ./migrations/env.py || sed -i '1ifrom models import Base' ./migrations/env.py
         vi ./migrations/env.py
