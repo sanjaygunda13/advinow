@@ -38,6 +38,7 @@ jobs:
           pip install -r ./requirements/requirements.txt
     - name: Initialize Alembic migrations
       run: |
+        pwd
         cd .\app\
 
         alembic init migrations
